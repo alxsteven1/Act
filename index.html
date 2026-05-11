@@ -6,267 +6,314 @@
     <title>Act | Actually Social Media</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=JetBrains+Mono:wght@300&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@300&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #ffffff;
-            --text: #1a1a1a;
-            --accent: #007AFF; /* iOS Blue */
-            --grey: #f2f2f7;
-            --safe-top: env(safe-area-inset-top);
-            --safe-bottom: env(safe-area-inset-bottom);
+            --bg: #ffffff; --text: #000000; --accent: #007AFF;
+            --grey: #f2f2f7; --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            overflow: hidden; 
-            height: 100vh;
-        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
 
-        /* Views System */
-        .view {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            display: none;
-            flex-direction: column;
-            padding: var(--safe-top) 20px var(--safe-bottom);
-        }
+        /* Navigation & Transitions */
+        .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; background: white; z-index: 10; }
         .view.active { display: flex; }
-
-        /* 1. Splash Screen */
-        #splash-view { 
-            justify-content: center; 
-            align-items: center; 
-            background: #fff;
-            z-index: 100;
-        }
-        .logo-group { text-align: center; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-        .logo-group h1 { font-size: 80px; font-weight: 800; letter-spacing: -3px; line-height: 0.9; }
-        .logo-group p { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #666; margin-top: 10px; }
-
-        /* 2. Login View */
-        #login-view { justify-content: center; align-items: center; text-align: center; }
-        .face-id-prompt { 
-            width: 80px; height: 80px; 
-            border: 2px solid var(--text); 
-            border-radius: 20px; 
-            margin-bottom: 30px;
-            display: flex; align-items: center; justify-content: center;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .scroll { overflow-y: auto; padding: calc(var(--safe-top) + 20px) 20px 120px; }
         
-        .btn {
-            width: 100%; padding: 18px; 
-            border-radius: 14px; border: none;
-            font-weight: 700; font-size: 16px; margin-bottom: 12px;
-            cursor: pointer;
-        }
-        .btn-black { background: var(--text); color: #fff; }
-        .btn-outline { background: transparent; border: 1px solid #ddd; }
+        /* Auth Flow */
+        .auth-screen { justify-content: center; align-items: center; padding: 40px; text-align: center; }
+        .btn { width: 100%; padding: 16px; border-radius: 14px; border: none; font-weight: 700; font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .btn-black { background: #000; color: #fff; }
+        .btn-white { background: #fff; border: 1px solid #ddd; color: #000; }
+        .brand-icon { width: 22px; height: 22px; }
 
-        /* 3. Main Interface */
-        .nav-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(255,255,255,0.8); backdrop-filter: blur(10px);
-            display: flex; justify-content: space-around;
-            padding: 15px 0 calc(15px + var(--safe-bottom));
-            border-top: 0.5px solid #ddd;
-        }
-        .nav-item { font-size: 12px; font-weight: 700; color: #999; text-transform: uppercase; }
-        .nav-item.active { color: var(--text); }
-
-        header { 
-            padding: 20px 0; 
-            display: flex; justify-content: space-between; align-items: flex-end; 
-        }
-        header h2 { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+        /* Header & Nav */
+        header { padding: 15px 20px; border-bottom: 0.5px solid #eee; display: flex; justify-content: space-between; align-items: center; padding-top: var(--safe-top); }
+        header h2 { font-weight: 800; font-size: 24px; letter-spacing: -1px; }
+        
+        .nav-bar { position: fixed; bottom: 0; width: 100%; background: rgba(255,255,255,0.95); backdrop-filter: blur(20px); border-top: 0.5px solid #eee; display: flex; justify-content: space-around; padding: 12px 0 calc(10px + var(--safe-bottom)); z-index: 100; }
+        .nav-item { font-size: 10px; font-weight: 700; color: #bbb; text-transform: uppercase; text-align: center; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item.active { color: #000; }
+        .nav-icon { width: 24px; height: 24px; margin: 0 auto; stroke-width: 2; }
 
         /* Feed */
-        .content-scroll { overflow-y: scroll; padding-bottom: 100px; }
-        .post { margin-bottom: 30px; }
-        .post-img { 
-            width: 100%; aspect-ratio: 4/5; 
-            background: #eee; border-radius: 2px; 
-            object-fit: cover;
-        }
-        .post-meta { margin-top: 10px; font-size: 14px; }
-        .post-meta b { font-weight: 800; margin-right: 8px; }
+        .post { margin-bottom: 35px; position: relative; }
+        .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .pfp { width: 35px; height: 35px; border-radius: 50%; background: #eee; object-fit: cover; }
+        .post-img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: 8px; background: #fafafa; }
+        .post-info { margin-top: 10px; }
+        .post-time { font-size: 12px; color: #999; margin-top: 2px; }
 
-        /* Add Friend View */
-        #camera-preview {
-            width: 100%; aspect-ratio: 1/1; 
-            background: #000; border-radius: 24px;
-            position: relative; overflow: hidden;
-            margin-top: 20px;
-        }
-        .qr-code {
-            width: 180px; height: 180px;
-            background: #fff; margin: 40px auto;
-            border: 10px solid #fff;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .timer { font-family: 'JetBrains Mono'; color: var(--accent); font-size: 24px; text-align: center; }
+        /* Add / QR Section */
+        #add-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .qr-wrapper { background: #000; padding: 30px; border-radius: 40px; margin-bottom: 20px; transition: 0.3s; }
+        .qr-code { background: #fff; padding: 15px; border-radius: 20px; width: 220px; height: 220px; display: flex; align-items: center; justify-content: center; }
+        .qr-code img { width: 100%; }
+        #timer-text { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: bold; color: var(--accent); margin-top: 20px; }
 
-        /* Animations */
-        .fade-out { opacity: 0; transform: scale(0.9); pointer-events: none; }
+        /* Settings Grouping */
+        .city-section { margin-bottom: 30px; }
+        .city-title { font-size: 12px; font-weight: 800; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; border-bottom: 0.5px solid #eee; padding-bottom: 5px; }
+        .friend-row { display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 0.5px solid #f9f9f9; }
+
+        /* Profile Overlay */
+        #profile-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; transform: translateX(100%); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000; }
+        #profile-view.open { transform: translateX(0); }
+        .profile-header { padding: calc(var(--safe-top) + 20px) 20px 20px; text-align: center; }
+        .pfp-large { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; }
+        .grid-item { aspect-ratio: 1/1; background: #eee; object-fit: cover; width: 100%; }
+
+        /* Popups */
+        #scan-popup { position: fixed; top: 20%; left: 10%; right: 10%; background: #000; color: #fff; padding: 30px; border-radius: 30px; text-align: center; z-index: 2000; display: none; }
+        .heart-anim { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); color: #fff; font-size: 80px; pointer-events: none; opacity: 0; transition: 0.3s; }
+        .heart-anim.show { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
     </style>
 </head>
 <body>
 
-    <div id="splash-view" class="view active">
-        <div class="logo-group" id="splash-logo">
-            <h1>Act</h1>
-            <p>Actually Social Media</p>
+    <div id="view-auth" class="view active auth-screen">
+        <h1 style="font-size: 50px; font-weight: 800; letter-spacing: -2px; margin-bottom: 40px;">Act.</h1>
+        <button class="btn btn-black" onclick="startFaceID()">Login</button>
+        <button class="btn btn-white" onclick="showView('view-signup')">Sign Up</button>
+    </div>
+
+    <div id="view-signup" class="view auth-screen">
+        <h2 style="margin-bottom: 40px;">Join Actually.</h2>
+        <button class="btn btn-white" onclick="completeLogin()">
+            <img class="brand-icon" src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"> Continue with Apple
+        </button>
+        <button class="btn btn-white" onclick="completeLogin()">
+            <img class="brand-icon" src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"> Continue with Google
+        </button>
+        <p onclick="showView('view-auth')" style="margin-top: 20px; font-size: 14px; opacity: 0.5;">Back</p>
+    </div>
+
+    <div id="view-faceid" class="view auth-screen" style="background: #000; color: #fff;">
+        <div style="width: 100px; height: 100px; border: 2px solid #fff; border-radius: 30px; margin-bottom: 30px; display: flex; align-items: center; justify-content: center;">
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3M8 7v10M16 7v10M12 8v5m0 3h.01"/></svg>
+        </div>
+        <p id="face-status">Position face in frame</p>
+    </div>
+
+    <div id="view-messages" class="view">
+        <header><h2>Messages</h2></header>
+        <div class="scroll">
+            <div class="friend-row">
+                <div class="pfp" style="background: #ddd;"></div>
+                <div><b>Hannah</b><p style="font-size: 12px; opacity: 0.5;">See you tonight!</p></div>
+            </div>
         </div>
     </div>
 
-    <div id="login-view" class="view">
-        <div class="face-id-prompt" onclick="fakeFaceID()">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3M8 7v10M16 7v10M12 8v5m0 3h.01"/></svg>
-        </div>
-        <h3 style="margin-bottom: 40px;">Verifying Presence...</h3>
-        <button class="btn btn-black" onclick="fakeFaceID()">Login with Face ID</button>
-        <button class="btn btn-outline" onclick="fakeFaceID()">Continue with Apple</button>
-        <button class="btn btn-outline" onclick="fakeFaceID()">Continue with Google</button>
-    </div>
-
-    <div id="feed-view" class="view">
-        <header>
-            <h2>Presence</h2>
-            <div style="font-family: 'JetBrains Mono'; font-size: 12px;">PTA, ZA</div>
-        </header>
-        <div class="content-scroll" id="feed-items">
+    <div id="view-feed" class="view">
+        <header><h2>Presence</h2></header>
+        <div class="scroll" id="feed-container">
             </div>
     </div>
 
-    <div id="add-view" class="view">
-        <header><h2>Handshake</h2></header>
-        <div id="camera-preview">
-            <video id="video" width="100%" height="100%" autoplay playsinline style="object-fit: cover;"></video>
+    <div id="view-post" class="view" style="background: #000; color: white;">
+        <header style="border: none;"><h2>Handshake</h2><span onclick="showView('view-feed')">Cancel</span></header>
+        <div id="add-container" onclick="simulateScan()">
+            <div class="qr-wrapper">
+                <div class="qr-code">
+                    <img id="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=user_alex_1">
+                </div>
+            </div>
+            <div id="timer-text">05.00s</div>
+            <p style="margin-top: 10px; opacity: 0.4; font-size: 12px;">TAP TO SIMULATE SCAN</p>
         </div>
-        <div class="qr-code" onclick="simulateScan()">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ActUser_402" alt="QR">
-        </div>
-        <div class="timer" id="countdown">05.00s</div>
-        <p style="text-align: center; font-size: 12px; margin-top: 10px; opacity: 0.5;">SCAN TO CONNECT</p>
     </div>
 
-    <div id="account-view" class="view">
+    <div id="view-settings" class="view">
         <header><h2>Circle</h2></header>
-        <div class="content-scroll">
-            <div id="friends-list"></div>
+        <div class="scroll" id="settings-container">
+            </div>
+    </div>
+
+    <div id="profile-view">
+        <header style="border: none;"><span onclick="closeProfile()">Close</span><h2 id="prof-name-header">Profile</h2><span></span></header>
+        <div class="scroll">
+            <div class="profile-header">
+                <img id="prof-pfp" class="pfp-large" src="">
+                <h2 id="prof-name">Name</h2>
+                <p id="prof-bio" style="font-size: 14px; margin-top: 10px; opacity: 0.7;">Bio goes here</p>
+            </div>
+            <div class="grid" id="prof-grid">
+                </div>
         </div>
     </div>
 
-    <nav class="nav-bar" id="main-nav" style="display: none;">
-        <div class="nav-item active" onclick="showView('feed-view')">Feed</div>
-        <div class="nav-item" onclick="showView('add-view')">Add</div>
-        <div class="nav-item" onclick="showView('account-view')">Circle</div>
+    <div id="scan-popup" onclick="this.style.display='none'">
+        <h3 style="margin-bottom: 10px;">New Presence Detected</h3>
+        <p id="popup-info"></p>
+        <button class="btn btn-white" style="margin-top: 20px;">Open Profile</button>
+    </div>
+
+    <nav class="nav-bar" id="bottom-nav" style="display: none;">
+        <div class="nav-item" onclick="showView('view-messages')">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Messages
+        </div>
+        <div class="nav-item" onclick="showView('view-post')">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Post
+        </div>
+        <div class="nav-item active" onclick="showView('view-feed')">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Feed
+        </div>
+        <div class="nav-item" onclick="showView('view-settings')">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Settings
+        </div>
     </nav>
 
     <script>
-        // Demo Data
-        const posts = [
-            { user: 'S. Mc Duck', loc: 'London', img: 'https://images.unsplash.com/photo-1529655683826-aba9b3e77383?auto=format&fit=crop&w=800' },
-            { user: 'Hannah N.', loc: 'Plett', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800' },
-            { user: 'Alex S.', loc: 'Pretoria', img: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800' }
-        ];
+        // ASSETS LOGIC
+        const users = {
+            alex: { name: "Alex", city: "Pretoria", bio: "Building Act.", pfp: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200", posts: ["posta1.jpg", "posta2.jpg"] },
+            paige: { name: "Paige", city: "Pretoria", bio: "Tuks Student", pfp: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200", posts: ["postp1.jpg"] },
+            hannah: { name: "Hannah", city: "London UK", bio: "Coffee & Travel", pfp: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200", posts: ["posth1.jpg"] },
+            kyle: { name: "Kyle", city: "Johannesburg", bio: "Fitness & Tech", pfp: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200", posts: ["postk1.jpg", "postk2.jpg", "postk3.jpg", "postk4.jpg", "postk5.jpg"] }
+        };
 
-        const friends = ["Spludge Mc Duck", "Hannah New", "Stewart Steven", "Paige S."];
+        let myCircle = ['hannah', 'paige']; // Initial friends
+        let scanIndex = 0;
 
-        // Navigation Logic
-        function showView(viewId) {
+        // Navigation
+        function showView(id) {
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
+            document.getElementById(id).classList.add('active');
             
-            // Update Nav UI
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.toggle('active', item.innerText.toLowerCase() === viewId.split('-')[0]);
+            // Highlight nav
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                const text = item.innerText.toLowerCase();
+                item.classList.toggle('active', id.includes(text));
             });
 
-            if(viewId === 'add-view') startCamera();
-            else stopCamera();
+            if(id === 'view-post') initQR();
+            if(id === 'view-feed') renderFeed();
+            if(id === 'view-settings') renderSettings();
         }
 
-        // 1. Initial Transition
-        setTimeout(() => {
-            document.getElementById('splash-logo').classList.add('fade-out');
-            setTimeout(() => {
-                showView('login-view');
-            }, 800);
-        }, 2500);
-
-        // 2. Fake FaceID
-        function fakeFaceID() {
-            const prompt = document.querySelector('.face-id-prompt');
-            prompt.style.borderColor = 'var(--accent)';
-            prompt.style.color = 'var(--accent)';
-            
-            setTimeout(() => {
-                document.getElementById('main-nav').style.display = 'flex';
-                loadFeed();
-                showView('feed-view');
-            }, 1000);
+        // Auth Logic
+        function startFaceID() {
+            showView('view-faceid');
+            setTimeout(() => { document.getElementById('face-status').innerText = "Verifying..."; }, 1000);
+            setTimeout(() => { completeLogin(); }, 2500);
         }
 
-        // 3. Load Feed
-        function loadFeed() {
-            const container = document.getElementById('feed-items');
-            container.innerHTML = posts.map(p => `
-                <div class="post">
-                    <img class="post-img" src="${p.img}">
-                    <div class="post-meta"><b>${p.user}</b> • ${p.loc}</div>
-                </div>
-            `).join('');
-
-            const friendsContainer = document.getElementById('friends-list');
-            friendsContainer.innerHTML = friends.map(f => `
-                <div style="padding: 20px 0; border-bottom: 0.5px solid #eee; display:flex; justify-content: space-between;">
-                    <b>${f}</b>
-                    <span style="color:var(--accent); font-size:12px;">CONNECTED</span>
-                </div>
-            `).join('');
+        function completeLogin() {
+            document.getElementById('bottom-nav').style.display = 'flex';
+            showView('view-feed');
         }
 
-        // 4. Camera & Handshake Logic
-        let stream = null;
-        async function startCamera() {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                document.getElementById('video').srcObject = stream;
-                startCountdown();
-            } catch (e) { console.log("Camera error"); }
-        }
-
-        function stopCamera() {
-            if(stream) stream.getTracks().forEach(t => t.stop());
-        }
-
-        function startCountdown() {
-            let sec = 5;
-            const timerEl = document.getElementById('countdown');
-            const interval = setInterval(() => {
-                sec -= 0.01;
-                timerEl.innerText = sec.toFixed(2) + "s";
-                if(sec <= 0) {
-                    clearInterval(interval);
-                    timerEl.innerText = "REFRESH QR";
+        // QR Logic
+        let qrInterval;
+        function initQR() {
+            let timeLeft = 500;
+            clearInterval(qrInterval);
+            qrInterval = setInterval(() => {
+                timeLeft -= 1;
+                document.getElementById('timer-text').innerText = (timeLeft / 100).toFixed(2) + "s";
+                if(timeLeft <= 0) {
+                    timeLeft = 500;
+                    document.getElementById('qr-img').src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=random_" + Math.random();
                 }
             }, 10);
         }
 
         function simulateScan() {
-            const videoContainer = document.getElementById('camera-preview');
-            videoContainer.style.border = '4px solid var(--accent)';
-            setTimeout(() => {
-                alert("Handshake Complete. Friend Added.");
-                showView('feed-view');
-            }, 500);
+            const potential = ['kyle'];
+            const newFriend = users[potential[0]];
+            if(!myCircle.includes('kyle')) {
+                myCircle.push('kyle');
+                document.getElementById('popup-info').innerText = `${newFriend.name} from ${newFriend.city} added.`;
+                document.getElementById('scan-popup').style.display = 'block';
+            }
+        }
+
+        // Feed Logic
+        function renderFeed() {
+            const container = document.getElementById('feed-container');
+            container.innerHTML = "";
+            
+            myCircle.forEach(userId => {
+                const user = users[userId];
+                user.posts.forEach((p, index) => {
+                    const postEl = document.createElement('div');
+                    postEl.className = 'post';
+                    postEl.innerHTML = `
+                        <div class="post-header" onclick="openProfile('${userId}')">
+                            <img src="${user.pfp}" class="pfp">
+                            <b>${user.name}</b>
+                        </div>
+                        <img src="https://picsum.photos/800/1000?random=${userId}${index}" class="post-img" ondblclick="likePost(this)">
+                        <div class="heart-anim">❤️</div>
+                        <div class="post-info">
+                            <p><b>${user.name}</b> was actually here.</p>
+                            <p class="post-time">${index + 1}h ago</p>
+                        </div>
+                    `;
+                    container.appendChild(postEl);
+                });
+            });
+        }
+
+        function likePost(img) {
+            const heart = img.nextElementSibling;
+            heart.classList.add('show');
+            setTimeout(() => heart.classList.remove('show'), 800);
+        }
+
+        // Profile Logic
+        function openProfile(id) {
+            const user = users[id];
+            document.getElementById('prof-name-header').innerText = user.name;
+            document.getElementById('prof-name').innerText = user.name;
+            document.getElementById('prof-bio').innerText = user.bio;
+            document.getElementById('prof-pfp').src = user.pfp;
+            
+            const grid = document.getElementById('prof-grid');
+            grid.innerHTML = user.posts.map((p, i) => `
+                <img class="grid-item" src="https://picsum.photos/400/400?random=${id}${i}">
+            `).join('');
+            
+            document.getElementById('profile-view').classList.add('open');
+        }
+
+        function closeProfile() {
+            document.getElementById('profile-view').classList.remove('open');
+        }
+
+        // Settings Logic
+        function renderSettings() {
+            const container = document.getElementById('settings-container');
+            container.innerHTML = "";
+            const groups = {};
+
+            myCircle.forEach(id => {
+                const u = users[id];
+                if(!groups[u.city]) groups[u.city] = [];
+                groups[u.city].push(u);
+            });
+
+            for(const city in groups) {
+                const section = document.createElement('div');
+                section.className = 'city-section';
+                section.innerHTML = `<div class="city-title">${city}</div>`;
+                groups[city].forEach(u => {
+                    section.innerHTML += `
+                        <div class="friend-row" onclick="openProfile('${u.name.toLowerCase()}')">
+                            <img src="${u.pfp}" class="pfp">
+                            <div><b>${u.name}</b></div>
+                        </div>
+                    `;
+                });
+                container.appendChild(section);
+            }
         }
     </script>
 </body>
