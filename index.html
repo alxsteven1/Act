@@ -16,7 +16,35 @@
 </head>
 <body>
 
-    <div id="view-messages" class="view active">
+    <div id="view-splash" class="view active auth-screen">
+        <h1 id="splash-logo">Act.</h1>
+    </div>
+
+    <div id="view-auth" class="view auth-screen">
+        <h1 style="font-size: 50px; font-weight: 800; letter-spacing: -2px; margin-bottom: 40px;">Act.</h1>
+        <button class="btn btn-black" onclick="startFaceID()">Login</button>
+        <button class="btn btn-white" onclick="showView('view-signup')">Sign Up</button>
+    </div>
+
+    <div id="view-signup" class="view auth-screen">
+        <h2 style="margin-bottom: 40px;">Join Actually.</h2>
+        <button class="btn btn-white" onclick="startFaceID()">
+            <img class="brand-icon" src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"> Continue with Apple
+        </button>
+        <button class="btn btn-white" onclick="startFaceID()">
+            <img class="brand-icon" src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg"> Continue with Google
+        </button>
+        <p onclick="showView('view-auth')" style="margin-top: 20px; font-size: 14px; opacity: 0.5;">Back</p>
+    </div>
+
+    <div id="view-faceid" class="view auth-screen" style="background: #000; color: #fff;">
+        <div class="face-id-box">
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3M8 7v10M16 7v10M12 8v5m0 3h.01"/></svg>
+        </div>
+        <p id="face-status">Position face in frame</p>
+    </div>
+
+    <div id="view-messages" class="view">
         <header><h2>Messages</h2></header>
         <div class="scroll" id="msg-list"></div>
     </div>
@@ -149,8 +177,8 @@
         <p id="modal-loc" style="color:#aaa; font-size:12px;"></p>
     </div>
 
-    <nav class="nav-bar">
-        <div class="nav-item active" onclick="showView('view-messages')">
+    <nav class="nav-bar" id="bottom-nav" style="display: none;">
+        <div class="nav-item" onclick="showView('view-messages')">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </div>
         <div class="nav-item" onclick="showView('view-post')">
@@ -159,7 +187,7 @@
         <div class="nav-item" onclick="showView('view-add')">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
         </div>
-        <div class="nav-item" onclick="showView('view-feed')">
+        <div class="nav-item active" onclick="showView('view-feed')">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
         </div>
         <div class="nav-item" onclick="showView('view-account')">
@@ -168,7 +196,7 @@
     </nav>
 
     <script>
-        // DATA WITH GLOBE COORDINATES
+        // DATA WITH MULTIPLE LOCATIONS
         const users = {
             alex: { 
                 id: 'alex', name: "Alex Matthew", city: "Pretoria", bio: "Building Act.", pfp: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200", 
@@ -178,15 +206,21 @@
                 ] 
             },
             hannah: { 
-                id: 'hannah', name: "Hannah", city: "London UK", bio: "Coffee & Travel", pfp: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200", lastMsg: "See you later!", 
-                posts: [{img: "https://picsum.photos/400/400?random=h1", loc:"London", cap:"Vibes", lat: 51.5, lng: -0.11, time: "4h ago"}] 
+                id: 'hannah', name: "Hannah", city: "Cape Town", bio: "Coffee & Travel", pfp: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200", lastMsg: "See you later!", 
+                posts: [
+                    {img: "https://picsum.photos/400/400?random=h1", loc:"Pretoria", cap:"Local vibes", lat: -25.7479, lng: 28.2293, time: "1d ago"},
+                    {img: "https://picsum.photos/400/400?random=h2", loc:"Pretoria", cap:"Campus coffee", lat: -25.7500, lng: 28.2300, time: "2d ago"}, // Slight offset so dot is clickable
+                    {img: "https://picsum.photos/400/400?random=h3", loc:"Cape Town", cap:"Mountain views", lat: -33.9249, lng: 18.4241, time: "1w ago"},
+                    {img: "https://picsum.photos/400/400?random=h4", loc:"Cape Town", cap:"Beach day", lat: -33.9349, lng: 18.4141, time: "1w ago"}, // Slight offset
+                    {img: "https://picsum.photos/400/400?random=h5", loc:"Durban", cap:"Warm waters", lat: -29.8587, lng: 31.0218, time: "2w ago"}
+                ] 
             },
             paige: { 
                 id: 'paige', name: "Paige", city: "Pretoria", bio: "Tuks Student", pfp: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200", lastMsg: "Did you check the assignment?", 
                 posts: [{img: "https://picsum.photos/400/400?random=p1", loc:"Pretoria", cap:"Studying", lat: -25.75, lng: 28.23, time: "8h ago"}] 
             },
-            spludge: { 
-                id: 'spludge', name: "S. Mc Duck", city: "London UK", bio: "Vibes only", pfp: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=200", lastMsg: "Bro the game last night...", 
+            miketyson: { 
+                id: 'miketyson', name: "Mike Tyson", city: "London UK", bio: "Vibes only", pfp: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=200", lastMsg: "Bro the game last night...", 
                 posts: [{img: "https://picsum.photos/400/400?random=s1", loc:"Pub", cap:"Match day", lat: 51.52, lng: -0.1, time: "1d ago"}] 
             },
             kyle: { 
@@ -195,23 +229,35 @@
             }
         };
 
-        let myCircle = ['hannah', 'paige', 'spludge']; 
+        let myCircle = ['hannah', 'paige', 'miketyson']; 
         let currentFacingMode = "environment";
         let localStream = null;
         let lastTapTime = 0;
-        let globes = {}; // Store globe instances
+        let globes = {}; 
+        let myGlobeInitialized = false;
+        let otherGlobeInitialized = false;
         let currentProfileId = null;
         
-        // INIT
+        // INIT SPLASH SCREEN
         document.addEventListener("DOMContentLoaded", () => {
-            renderMessages(); renderFeed(); startQRLoop();
-            // Wait for DOM to render maps properly
-            setTimeout(() => {
-                initGlobe('alex', 'my-globe-viz');
-                initGlobe('hannah', 'other-globe-viz'); // Placeholder init
-                renderAccount();
-            }, 500);
+            setTimeout(() => { showView('view-auth'); }, 1500);
         });
+
+        // AUTH LOGIC
+        function startFaceID() {
+            showView('view-faceid');
+            document.getElementById('face-status').innerText = "Scanning...";
+            setTimeout(() => { document.getElementById('face-status').innerText = "Verifying Identity..."; }, 1200);
+            setTimeout(() => { completeLogin(); }, 2500);
+        }
+
+        function completeLogin() {
+            document.getElementById('bottom-nav').style.display = 'flex';
+            renderMessages(); 
+            renderFeed(); 
+            startQRLoop();
+            showView('view-feed'); 
+        }
 
         // VIEW NAVIGATION
         function showView(id) {
@@ -225,11 +271,20 @@
             
             if(localStream) { localStream.getTracks().forEach(track => track.stop()); }
             
-            // Handshake defaults to user (selfie) cam
             if(id === 'view-post') setupCamera('post-camera-stream', currentFacingMode);
-            if(id === 'view-add') setupCamera('add-camera-stream', 'user');
+            // Handshake defaults to REAR (environment) camera
+            if(id === 'view-add') setupCamera('add-camera-stream', 'environment');
 
-            if(id === 'view-account') renderAccount();
+            if(id === 'view-account') {
+                renderAccount();
+                // ONLY initialize globe when view is visible (fixes 0x0 size bug)
+                if(!myGlobeInitialized) {
+                    setTimeout(() => { initGlobe('alex', 'my-globe-viz'); }, 100);
+                    myGlobeInitialized = true;
+                } else {
+                    updateGlobeData('alex', 'my-globe-viz');
+                }
+            }
             if(id === 'view-feed') renderFeed();
         }
 
@@ -241,7 +296,6 @@
                 const videoElement = document.getElementById(videoId);
                 videoElement.srcObject = localStream;
                 
-                // Mirror effect if selfie cam
                 if(mode === 'user') {
                     videoElement.style.transform = "scaleX(-1)";
                 } else {
@@ -261,7 +315,6 @@
             canvas.width = video.videoWidth; canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
             
-            // Handle mirror flip on capture if selfie
             if(currentFacingMode === 'user') {
                 ctx.translate(canvas.width, 0);
                 ctx.scale(-1, 1);
@@ -275,21 +328,17 @@
 
         function publishPost() {
             const imgSrc = document.getElementById('preview-image').src;
-            const loc = document.getElementById('post-location').value || "Current Location";
+            const loc = document.getElementById('post-location').value || "Pretoria";
             const cap = document.getElementById('post-caption').value;
             
-            // Insert at the TOP of the feed array
             users.alex.posts.unshift({
                 img: imgSrc, loc: loc, cap: cap, 
-                lat: -25.7479, lng: 28.2293, // Defaulting to SA for demo
-                time: "1m ago" // Explicitly setting 1m ago
+                lat: -25.7479, lng: 28.2293, 
+                time: "1m ago" 
             }); 
             
             document.getElementById('post-location').value = "";
             document.getElementById('post-caption').value = "";
-            
-            // Re-render map and feed
-            updateGlobeData('alex', 'my-globe-viz');
             showView('view-feed');
         }
 
@@ -325,20 +374,16 @@
                 .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
                 .backgroundColor('#fafafa')
                 .width(width)
-                .height(width) // Square aspect ratio
+                .height(width) 
                 .showAtmosphere(true)
                 .pointColor(() => 'red')
                 .pointAltitude(0.05)
                 .pointRadius(1)
                 .onPointClick((point) => {
-                    // Zoom to country level
                     myGlobe.pointOfView({ lat: point.lat, lng: point.lng, altitude: 0.8 }, 1000);
-                    
-                    // Show reset button
                     const btnId = containerId === 'my-globe-viz' ? 'my-map-reset' : 'other-map-reset';
                     document.getElementById(btnId).style.display = 'block';
 
-                    // Open photo modal after a short delay
                     setTimeout(() => {
                         document.getElementById('modal-img').src = point.img;
                         document.getElementById('modal-cap').innerText = point.cap;
@@ -347,7 +392,6 @@
                     }, 800);
                 });
 
-            // Restrict zoom so user doesn't get lost
             myGlobe.controls().minDistance = 150;
             myGlobe.controls().maxDistance = 400;
 
@@ -362,12 +406,9 @@
             const userData = users[userId];
             myGlobe.pointsData(userData.posts);
 
-            // Determine default view
             if(userId === 'alex') {
-                // Global view: pull camera back to see UK and SA
                 myGlobe.pointOfView({ lat: 10, lng: 15, altitude: 2.5 }, 1000);
             } else {
-                // Other users: Lock to their first photo's location (e.g., SA)
                 if(userData.posts.length > 0) {
                     const loc = userData.posts[0];
                     myGlobe.pointOfView({ lat: loc.lat, lng: loc.lng, altitude: 1.2 }, 1000);
@@ -377,7 +418,7 @@
 
         function resetGlobe(userId) {
             const containerId = userId === 'alex' ? 'my-globe-viz' : 'other-globe-viz';
-            updateGlobeData(userId, containerId); // Resets position
+            updateGlobeData(userId, containerId); 
             const btnId = userId === 'alex' ? 'my-map-reset' : 'other-map-reset';
             document.getElementById(btnId).style.display = 'none';
         }
@@ -388,14 +429,11 @@
             container.innerHTML = "";
             
             let allPosts = [];
-            // Add Alex's posts first
             users.alex.posts.forEach(post => { allPosts.push({ user: users.alex, post: post }); });
-            // Add friends' posts
             myCircle.forEach(id => {
                 users[id].posts.forEach(post => { allPosts.push({ user: users[id], post: post }); });
             });
 
-            // Note: Since we use unshift for Alex, his new posts are already at the top of this list
             allPosts.forEach(data => {
                 container.innerHTML += `
                     <div class="post">
@@ -435,11 +473,16 @@
             document.getElementById('other-bio').innerText = u.bio;
             document.getElementById('other-pfp').src = u.pfp;
             
-            // Update the 3D globe for this profile
-            updateGlobeData(id, 'other-globe-viz');
-            document.getElementById('other-map-reset').style.display = 'none';
-
             document.getElementById('profile-overlay').classList.add('open');
+
+            // Initialize other globe if needed
+            if(!otherGlobeInitialized) {
+                setTimeout(() => { initGlobe(id, 'other-globe-viz'); }, 100);
+                otherGlobeInitialized = true;
+            } else {
+                updateGlobeData(id, 'other-globe-viz');
+            }
+            document.getElementById('other-map-reset').style.display = 'none';
         }
 
         function closeProfile() { document.getElementById('profile-overlay').classList.remove('open'); }
@@ -453,9 +496,6 @@
             document.getElementById('stat-friends').innerText = myCircle.length;
             document.getElementById('stat-posts').innerText = me.posts.length;
 
-            updateGlobeData('alex', 'my-globe-viz');
-
-            // Circle Grouping
             const circleContainer = document.getElementById('my-circle-container');
             const groups = {};
             myCircle.forEach(id => {
@@ -477,7 +517,7 @@
             `).join('');
         }
 
-        function renderMessages() { /* Kept simple for space */ 
+        function renderMessages() { 
             document.getElementById('msg-list').innerHTML = myCircle.map(id => `
                 <div class="friend-row" onclick="openChat('${id}')">
                     <img src="${users[id].pfp}" class="pfp">
