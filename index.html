@@ -1,6 +1,9 @@
 
 
 
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,13 +60,10 @@
                 <b id="chat-name">Name</b>
             </div>
         </header>
-        <div class="chat-area" id="chat-history">
-            <div class="bubble them">Hey! Are we still on for later?</div>
-            <div class="bubble me">Yeah definitely, just finishing up this code.</div>
-        </div>
+        <div class="chat-area" id="chat-history"></div>
         <div class="chat-input">
-            <input type="text" placeholder="Message...">
-            <button style="background:var(--accent); color:white; border:none; padding:0 20px; border-radius:24px; font-weight:bold;">Send</button>
+            <input type="text" id="chat-input-field" placeholder="Message..." onkeydown="if(event.key==='Enter')sendMessage()">
+            <button class="chat-send-btn" onclick="sendMessage()">Send</button>
         </div>
     </div>
 
@@ -169,9 +169,33 @@
         </div>
     </div>
 
-    <div id="scan-popup" onclick="this.classList.remove('show')">
-        <h3 style="margin-bottom: 5px;">Connection Successful!</h3>
-        <p id="popup-text" style="font-size: 14px; opacity: 0.8;"></p>
+    <div id="scan-popup">
+        <div class="sports-card">
+            <div class="card-shimmer"></div>
+            <div class="card-banner">
+                <span class="card-banner-label">Act. Network</span>
+                <span class="card-banner-tag">✓ Verified</span>
+                <div class="card-connected-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="#4CD964"><path d="M20 6L9 17l-5-5"/></svg>
+                    <span>Connected!</span>
+                </div>
+                <div class="card-avatar-wrap">
+                    <img id="card-pfp" src="" alt="Profile">
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="card-name" class="card-name"></div>
+                <div id="card-username" class="card-username"></div>
+                <div id="card-bio" class="card-bio"></div>
+                <div class="card-stats">
+                    <div class="card-stat"><b id="card-posts">0</b><span>Posts</span></div>
+                    <div class="card-stat"><b id="card-city">—</b><span>City</span></div>
+                    <div class="card-stat"><b>New</b><span>Friend</span></div>
+                </div>
+                <div class="card-tags" id="card-tags"></div>
+                <button class="card-dismiss" onclick="document.getElementById('scan-popup').classList.remove('show')">Dismiss</button>
+            </div>
+        </div>
     </div>
 
     <div id="photo-modal">
@@ -182,19 +206,20 @@
     </div>
 
     <nav class="nav-bar" id="bottom-nav" style="display: none;">
-        <div class="nav-item" onclick="showView('view-messages')">
+        <div class="nav-item" id="nav-messages" onclick="showView('view-messages')">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span class="nav-badge" id="msg-badge" style="display:none;">2</span>
         </div>
-        <div class="nav-item" onclick="showView('view-post')">
+        <div class="nav-item" id="nav-post" onclick="showView('view-post')">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
-        <div class="nav-item" onclick="showView('view-add')">
+        <div class="nav-item" id="nav-add" onclick="showView('view-add')">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
         </div>
-        <div class="nav-item active" onclick="showView('view-feed')">
+        <div class="nav-item active" id="nav-feed" onclick="showView('view-feed')">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
         </div>
-        <div class="nav-item" onclick="showView('view-account')">
+        <div class="nav-item" id="nav-account" onclick="showView('view-account')">
             <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2" ry="2"/><path d="M8 18v-2a4 4 0 0 1 8 0v2"/><circle cx="12" cy="10" r="3"/></svg>
         </div>
     </nav>
@@ -229,22 +254,50 @@
             }
         };
 
-        let myCircle = ['hannah', 'paige']; 
+        let myCircle = ['hannah', 'paige'];
         let currentFacingMode = "environment";
         let localStream = null;
         let lastTapTime = 0;
-        let globes = {}; 
+        let globes = {};
         let myGlobeInitialized = false;
         let otherGlobeInitialized = false;
         let currentProfileId = null;
-        
+        let currentChatId = null;
+
+        // Per-chat message history (temp store)
+        const chatHistory = {
+            hannah: [
+                { from: 'them', text: "Hey! Are you coming out tonight? 🎉", time: "2h ago" },
+                { from: 'them', text: "Let me know, we're all waiting on you 😊", time: "2h ago" }
+            ],
+            paige: [
+                { from: 'them', text: "Did you check the assignment?", time: "5h ago" },
+                { from: 'me', text: "Yeah, just finished it!", time: "4h ago" }
+            ],
+            kyle: []
+        };
+        let hannahUnread = 2;
+
         // INIT SPLASH SCREEN
         document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => { showView('view-auth'); }, 1500);
+            // Show unread badge on load
+            updateMsgBadge();
         });
+
+        function updateMsgBadge() {
+            const badge = document.getElementById('msg-badge');
+            if (hannahUnread > 0) {
+                badge.textContent = hannahUnread;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
 
         // AUTH LOGIC
         function startFaceID() {
+            document.getElementById('bottom-nav').classList.add('hidden');
             showView('view-faceid');
             document.getElementById('face-status').innerText = "Scanning...";
             setTimeout(() => { document.getElementById('face-status').innerText = "Verifying Identity..."; }, 1200);
@@ -253,8 +306,9 @@
 
         function completeLogin() {
             document.getElementById('bottom-nav').style.display = 'flex';
+            document.getElementById('bottom-nav').classList.remove('hidden');
             renderMessages(); renderFeed(); startQRLoop();
-            showView('view-feed'); 
+            showView('view-feed');
         }
 
         // VIEW NAVIGATION
@@ -386,11 +440,18 @@
         function simulateScan() {
             if(!myCircle.includes('kyle')) {
                 myCircle.push('kyle');
-                document.getElementById('popup-text').innerText = `You are now connected with ${users.kyle.name}.`;
+                chatHistory.kyle = [];
+                const u = users.kyle;
+                document.getElementById('card-pfp').src = u.pfp;
+                document.getElementById('card-name').textContent = u.name;
+                document.getElementById('card-username').textContent = '@' + u.id + ' · ' + u.city;
+                document.getElementById('card-bio').textContent = u.bio;
+                document.getElementById('card-posts').textContent = u.posts.length;
+                document.getElementById('card-city').textContent = u.city;
+                document.getElementById('card-tags').innerHTML = ['Tech','Fitness','Joburg'].map(t=>`<span class="card-tag">${t}</span>`).join('');
                 document.getElementById('scan-popup').classList.add('show');
-                renderMessages(); 
+                renderMessages();
                 if(myGlobeInitialized) renderAccount();
-                setTimeout(() => document.getElementById('scan-popup').classList.remove('show'), 3000);
             }
         }
 
@@ -548,21 +609,64 @@
             `).join('');
         }
 
-        function renderMessages() { 
-            document.getElementById('msg-list').innerHTML = myCircle.map(id => `
-                <div class="friend-row" onclick="openChat('${id}')">
+        function renderMessages() {
+            document.getElementById('msg-list').innerHTML = myCircle.map(id => {
+                const isHannahUnread = id === 'hannah' && hannahUnread > 0;
+                const lastMsgs = chatHistory[id] || [];
+                const preview = lastMsgs.length ? lastMsgs[lastMsgs.length-1].text : (users[id].lastMsg || 'Say hello!');
+                return `<div class="friend-row" onclick="openChat('${id}')">
                     <img src="${users[id].pfp}" class="pfp">
-                    <div style="flex: 1;">
-                        <div style="display:flex; justify-content:space-between;">
-                            <b>${users[id].name}</b><span style="font-size:12px; color:#ccc;">2h</span>
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <b class="${isHannahUnread?'msg-name-unread':''}">${users[id].name}</b>
+                            <span style="font-size:11px;color:#bbb;">${isHannahUnread?'2h':''}</span>
                         </div>
-                        <div class="msg-preview">${users[id].lastMsg}</div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <div class="msg-preview" style="${isHannahUnread?'font-weight:600;color:#000;':''}">${preview}</div>
+                            ${isHannahUnread?`<span class="unread-count">${hannahUnread}</span>`:''}
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         }
-        function openChat(id) { document.getElementById('chat-name').innerText = users[id].name; document.getElementById('chat-view').classList.add('open'); }
-        function closeChat() { document.getElementById('chat-view').classList.remove('open'); }
+
+        function openChat(id) {
+            currentChatId = id;
+            document.getElementById('chat-name').innerText = users[id].name;
+            if (id === 'hannah') { hannahUnread = 0; updateMsgBadge(); renderMessages(); }
+            renderChatHistory(id);
+            document.getElementById('chat-view').classList.add('open');
+            document.getElementById('chat-input-field').value = '';
+            setTimeout(() => {
+                const area = document.getElementById('chat-history');
+                area.scrollTop = area.scrollHeight;
+            }, 50);
+        }
+
+        function renderChatHistory(id) {
+            const area = document.getElementById('chat-history');
+            const msgs = chatHistory[id] || [];
+            area.innerHTML = msgs.map(m =>
+                `<div class="bubble ${m.from}">${m.text}</div>`
+            ).join('');
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input-field');
+            const text = input.value.trim();
+            if (!text || !currentChatId) return;
+            chatHistory[currentChatId] = chatHistory[currentChatId] || [];
+            chatHistory[currentChatId].push({ from: 'me', text: text });
+            input.value = '';
+            renderChatHistory(currentChatId);
+            renderMessages();
+            setTimeout(() => {
+                const area = document.getElementById('chat-history');
+                area.scrollTop = area.scrollHeight;
+            }, 30);
+        }
+
+        function closeChat() { document.getElementById('chat-view').classList.remove('open'); currentChatId = null; }
     </script>
 </body>
 </html>
