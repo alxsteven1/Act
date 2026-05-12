@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,12 +11,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    
     <script src="https://unpkg.com/globe.gl"></script>
 </head>
 <body>
 
-    <div id="view-splash" class="view active auth-screen">
+    <div id="view-splash" class="view auth-screen active">
         <h1 id="splash-logo">Act.</h1>
         <p class="splash-slogan">Actually Social Media</p>
     </div>
@@ -68,10 +68,10 @@
     </div>
 
     <div id="view-post" class="view">
-        <header style="background: transparent; color: white; border: none; position: absolute; width: 100%; z-index: 50;">
-            <h2>Capture</h2>
+        <header style="background: transparent; color: white; border: none; z-index: 50;">
+            <h2 style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Capture</h2>
         </header>
-        <div class="camera-container">
+        <div class="camera-container" style="position: absolute; top:0; z-index: 1;">
             <video id="post-camera-stream" autoplay playsinline></video>
             <div class="camera-controls">
                 <div class="flip-btn" onclick="flipCamera('post')">
@@ -92,11 +92,10 @@
         </header>
         <div class="scroll">
             <img id="preview-image" class="preview-img" src="">
-            
             <div style="position: relative;">
                 <input type="text" id="post-location" class="input-field" placeholder="Search City..." onkeyup="searchLocation(this.value)">
-                <div id="location-results"></div> </div>
-
+                <div id="location-results"></div> 
+            </div>
             <textarea id="post-caption" class="input-field" placeholder="Write a caption..." rows="3"></textarea>
             <button class="btn" onclick="publishPost()">Share</button>
         </div>
@@ -104,9 +103,9 @@
 
     <div id="view-add" class="view">
         <header><h2>Handshake</h2></header>
-        <div class="scroll" style="padding: 0 20px;">
+        <div class="scroll" style="display: flex; flex-direction: column;">
             <div class="camera-square" onclick="simulateScan()">
-                <video id="add-camera-stream" autoplay playsinline></video>
+                <video id="add-camera-stream" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
                 <div style="position:absolute; bottom:10px; width:100%; text-align:center; font-size:12px; color:rgba(255,255,255,0.5);">TAP TO SCAN</div>
             </div>
             <div class="qr-section">
@@ -125,7 +124,7 @@
 
     <div id="view-account" class="view">
         <header><h2>My Account</h2></header>
-        <div class="scroll" id="account-scroll-area">
+        <div class="scroll">
             <div class="profile-header">
                 <img id="my-pfp" src="">
                 <h2 id="my-name">Alex</h2>
@@ -254,9 +253,7 @@
 
         function completeLogin() {
             document.getElementById('bottom-nav').style.display = 'flex';
-            renderMessages(); 
-            renderFeed(); 
-            startQRLoop();
+            renderMessages(); renderFeed(); startQRLoop();
             showView('view-feed'); 
         }
 
@@ -270,18 +267,15 @@
                 item.classList.toggle('active', views[index] === id);
             });
             
-            // Scroll reset to fix header overlap perfectly
             document.querySelectorAll('.scroll').forEach(el => el.scrollTop = 0);
             
             if(localStream) { localStream.getTracks().forEach(track => track.stop()); }
             
             if(id === 'view-post') setupCamera('post-camera-stream', currentFacingMode);
-            // Handshake camera faces outward (environment)
             if(id === 'view-add') setupCamera('add-camera-stream', 'environment');
 
             if(id === 'view-account') {
                 renderAccount();
-                // We delay map render by 100ms so the CSS container has a width
                 if(!myGlobeInitialized) {
                     setTimeout(() => { initGlobe('alex', 'my-globe-viz'); }, 100);
                     myGlobeInitialized = true;
@@ -326,7 +320,7 @@
         }
 
         // --- LIVE SEARCH LOCATION API ---
-        let selectedLocation = { name: "", lat: -25.7479, lng: 28.2293 }; // Default Pretoria
+        let selectedLocation = { name: "", lat: -25.7479, lng: 28.2293 };
         let searchTimeout = null;
 
         async function searchLocation(query) {
@@ -336,7 +330,6 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
                 try {
-                    // Using free Open-Meteo Geocoding API
                     const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=5&language=en&format=json`);
                     const data = await res.json();
                     
@@ -373,7 +366,6 @@
             document.getElementById('post-caption').value = "";
             document.getElementById('location-results').style.display = 'none';
             
-            // Updates Map so red dot appears
             if(myGlobeInitialized) updateGlobeData('alex', 'my-globe-viz');
             showView('view-feed');
         }
@@ -402,7 +394,7 @@
             }
         }
 
-        // --- 3D PRESENCE MAP LOGIC (REALISTIC BLUE MARBLE) ---
+        // --- 3D PRESENCE MAP LOGIC (BLUE MARBLE) ---
         function initGlobe(userId, containerId) {
             const container = document.getElementById(containerId);
             const width = container.parentElement.clientWidth;
@@ -417,7 +409,7 @@
                 .atmosphereAltitude(0.15)
                 .pointColor(() => 'red')
                 .pointAltitude(0.08)
-                .pointRadius(2) // Made larger to tap easily
+                .pointRadius(2)
                 .onPointClick((point) => {
                     myGlobe.pointOfView({ lat: point.lat, lng: point.lng, altitude: 0.6 }, 800);
                     const btnId = containerId === 'my-globe-viz' ? 'my-map-reset' : 'other-map-reset';
@@ -446,11 +438,11 @@
             myGlobe.pointsData(userData.posts);
 
             if(userId === 'alex') {
-                myGlobe.pointOfView({ lat: 10, lng: 15, altitude: 2.5 }, 1000); // Global View
+                myGlobe.pointOfView({ lat: 10, lng: 15, altitude: 2.5 }, 1000); 
             } else {
                 if(userData.posts.length > 0) {
                     const loc = userData.posts[0];
-                    myGlobe.pointOfView({ lat: loc.lat, lng: loc.lng, altitude: 1.2 }, 1000); // Local View
+                    myGlobe.pointOfView({ lat: loc.lat, lng: loc.lng, altitude: 1.2 }, 1000); 
                 }
             }
         }
