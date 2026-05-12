@@ -1,6 +1,5 @@
 
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,10 +17,12 @@
 
     <div id="view-splash" class="view active auth-screen">
         <h1 id="splash-logo">Act.</h1>
+        <p class="splash-slogan">Actually Social Media</p>
     </div>
 
     <div id="view-auth" class="view auth-screen">
-        <h1 style="font-size: 50px; font-weight: 800; letter-spacing: -2px; margin-bottom: 40px;">Act.</h1>
+        <h1 style="font-size: 50px; font-weight: 800; letter-spacing: -2px; margin-bottom: 10px;">Act.</h1>
+        <p class="splash-slogan" style="margin-bottom: 40px;">Actually Social Media</p>
         <button class="btn btn-black" onclick="startFaceID()">Login</button>
         <button class="btn btn-white" onclick="showView('view-signup')">Sign Up</button>
     </div>
@@ -67,7 +68,7 @@
     </div>
 
     <div id="view-post" class="view">
-        <header style="background: transparent; color: white; border: none; position: absolute; width: 100%;">
+        <header style="background: transparent; color: white; border: none; position: absolute; width: 100%; z-index: 50;">
             <h2>Capture</h2>
         </header>
         <div class="camera-container">
@@ -91,7 +92,11 @@
         </header>
         <div class="scroll">
             <img id="preview-image" class="preview-img" src="">
-            <input type="text" id="post-location" class="input-field" placeholder="Add Location (e.g., Pretoria)">
+            
+            <div style="position: relative;">
+                <input type="text" id="post-location" class="input-field" placeholder="Search City..." onkeyup="searchLocation(this.value)">
+                <div id="location-results"></div> </div>
+
             <textarea id="post-caption" class="input-field" placeholder="Write a caption..." rows="3"></textarea>
             <button class="btn" onclick="publishPost()">Share</button>
         </div>
@@ -120,7 +125,7 @@
 
     <div id="view-account" class="view">
         <header><h2>My Account</h2></header>
-        <div class="scroll">
+        <div class="scroll" id="account-scroll-area">
             <div class="profile-header">
                 <img id="my-pfp" src="">
                 <h2 id="my-name">Alex</h2>
@@ -170,8 +175,8 @@
         <p id="popup-text" style="font-size: 14px; opacity: 0.8;"></p>
     </div>
 
-    <div id="photo-modal" onclick="this.classList.remove('show')">
-        <span class="close-modal">Close</span>
+    <div id="photo-modal">
+        <span class="close-modal" onclick="document.getElementById('photo-modal').classList.remove('show')">Close X</span>
         <img id="modal-img" src="">
         <p id="modal-cap" style="color:white; margin-top:15px; font-weight:bold;"></p>
         <p id="modal-loc" style="color:#aaa; font-size:12px;"></p>
@@ -196,7 +201,7 @@
     </nav>
 
     <script>
-        // DATA WITH MULTIPLE LOCATIONS
+        // DATA
         const users = {
             alex: { 
                 id: 'alex', name: "Alex Matthew", city: "Pretoria", bio: "Building Act.", pfp: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200", 
@@ -208,28 +213,24 @@
             hannah: { 
                 id: 'hannah', name: "Hannah", city: "Cape Town", bio: "Coffee & Travel", pfp: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200", lastMsg: "See you later!", 
                 posts: [
-                    {img: "https://picsum.photos/400/400?random=h1", loc:"Pretoria", cap:"Local vibes", lat: -25.7479, lng: 28.2293, time: "1d ago"},
-                    {img: "https://picsum.photos/400/400?random=h2", loc:"Pretoria", cap:"Campus coffee", lat: -25.7500, lng: 28.2300, time: "2d ago"}, // Slight offset so dot is clickable
-                    {img: "https://picsum.photos/400/400?random=h3", loc:"Cape Town", cap:"Mountain views", lat: -33.9249, lng: 18.4241, time: "1w ago"},
-                    {img: "https://picsum.photos/400/400?random=h4", loc:"Cape Town", cap:"Beach day", lat: -33.9349, lng: 18.4141, time: "1w ago"}, // Slight offset
-                    {img: "https://picsum.photos/400/400?random=h5", loc:"Durban", cap:"Warm waters", lat: -29.8587, lng: 31.0218, time: "2w ago"}
+                    {img: "https://picsum.photos/400/400?random=h1", loc:"Pretoria, SA", cap:"Local vibes", lat: -25.7479, lng: 28.2293, time: "1d ago"},
+                    {img: "https://picsum.photos/400/400?random=h2", loc:"Pretoria, SA", cap:"Campus coffee", lat: -25.7600, lng: 28.2400, time: "2d ago"}, 
+                    {img: "https://picsum.photos/400/400?random=h3", loc:"Cape Town, SA", cap:"Mountain views", lat: -33.9249, lng: 18.4241, time: "1w ago"},
+                    {img: "https://picsum.photos/400/400?random=h4", loc:"Cape Town, SA", cap:"Beach day", lat: -33.9449, lng: 18.4041, time: "1w ago"}, 
+                    {img: "https://picsum.photos/400/400?random=h5", loc:"Durban, SA", cap:"Warm waters", lat: -29.8587, lng: 31.0218, time: "2w ago"}
                 ] 
             },
             paige: { 
                 id: 'paige', name: "Paige", city: "Pretoria", bio: "Tuks Student", pfp: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200", lastMsg: "Did you check the assignment?", 
-                posts: [{img: "https://picsum.photos/400/400?random=p1", loc:"Pretoria", cap:"Studying", lat: -25.75, lng: 28.23, time: "8h ago"}] 
-            },
-            miketyson: { 
-                id: 'miketyson', name: "Mike Tyson", city: "London UK", bio: "Vibes only", pfp: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=200", lastMsg: "Bro the game last night...", 
-                posts: [{img: "https://picsum.photos/400/400?random=s1", loc:"Pub", cap:"Match day", lat: 51.52, lng: -0.1, time: "1d ago"}] 
+                posts: [{img: "https://picsum.photos/400/400?random=p1", loc:"Pretoria, SA", cap:"Studying", lat: -25.75, lng: 28.23, time: "8h ago"}] 
             },
             kyle: { 
                 id: 'kyle', name: "Kyle", city: "Johannesburg", bio: "Tech & Fitness", pfp: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200", lastMsg: "", 
-                posts: [{img: "https://picsum.photos/400/400?random=k1", loc:"Johannesburg", cap:"Grind", lat: -26.2041, lng: 28.0473, time: "12h ago"}] 
+                posts: [{img: "https://picsum.photos/400/400?random=k1", loc:"Johannesburg, SA", cap:"Grind", lat: -26.2041, lng: 28.0473, time: "12h ago"}] 
             }
         };
 
-        let myCircle = ['hannah', 'paige', 'miketyson']; 
+        let myCircle = ['hannah', 'paige']; 
         let currentFacingMode = "environment";
         let localStream = null;
         let lastTapTime = 0;
@@ -269,15 +270,18 @@
                 item.classList.toggle('active', views[index] === id);
             });
             
+            // Scroll reset to fix header overlap perfectly
+            document.querySelectorAll('.scroll').forEach(el => el.scrollTop = 0);
+            
             if(localStream) { localStream.getTracks().forEach(track => track.stop()); }
             
             if(id === 'view-post') setupCamera('post-camera-stream', currentFacingMode);
-            // Handshake defaults to REAR (environment) camera
+            // Handshake camera faces outward (environment)
             if(id === 'view-add') setupCamera('add-camera-stream', 'environment');
 
             if(id === 'view-account') {
                 renderAccount();
-                // ONLY initialize globe when view is visible (fixes 0x0 size bug)
+                // We delay map render by 100ms so the CSS container has a width
                 if(!myGlobeInitialized) {
                     setTimeout(() => { initGlobe('alex', 'my-globe-viz'); }, 100);
                     myGlobeInitialized = true;
@@ -288,19 +292,15 @@
             if(id === 'view-feed') renderFeed();
         }
 
-        // --- CAMERA & POSTING ---
+        // --- CAMERA ---
         async function setupCamera(videoId, mode) {
             currentFacingMode = mode;
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } });
                 const videoElement = document.getElementById(videoId);
                 videoElement.srcObject = localStream;
-                
-                if(mode === 'user') {
-                    videoElement.style.transform = "scaleX(-1)";
-                } else {
-                    videoElement.style.transform = "scaleX(1)";
-                }
+                if(mode === 'user') { videoElement.style.transform = "scaleX(-1)"; } 
+                else { videoElement.style.transform = "scaleX(1)"; }
             } catch (e) { console.log("Camera access blocked."); }
         }
 
@@ -316,8 +316,7 @@
             const ctx = canvas.getContext('2d');
             
             if(currentFacingMode === 'user') {
-                ctx.translate(canvas.width, 0);
-                ctx.scale(-1, 1);
+                ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
             }
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
@@ -326,19 +325,56 @@
             document.getElementById('view-post-details').classList.add('active');
         }
 
+        // --- LIVE SEARCH LOCATION API ---
+        let selectedLocation = { name: "", lat: -25.7479, lng: 28.2293 }; // Default Pretoria
+        let searchTimeout = null;
+
+        async function searchLocation(query) {
+            const resultsDiv = document.getElementById('location-results');
+            if(query.length < 3) { resultsDiv.style.display = 'none'; return; }
+            
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    // Using free Open-Meteo Geocoding API
+                    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=5&language=en&format=json`);
+                    const data = await res.json();
+                    
+                    if(data.results && data.results.length > 0) {
+                        resultsDiv.innerHTML = data.results.map(city => `
+                            <div class="search-item" onclick="selectLocation('${city.name.replace(/'/g, "\\'")}, ${city.country.replace(/'/g, "\\'")}', ${city.latitude}, ${city.longitude})">
+                                <b>${city.name}</b>, ${city.admin1 ? city.admin1 + ', ' : ''}${city.country}
+                            </div>
+                        `).join('');
+                        resultsDiv.style.display = 'block';
+                    }
+                } catch(e) { console.error("Search failed"); }
+            }, 500);
+        }
+
+        function selectLocation(name, lat, lng) {
+            document.getElementById('post-location').value = name;
+            selectedLocation = { name, lat, lng };
+            document.getElementById('location-results').style.display = 'none';
+        }
+
         function publishPost() {
             const imgSrc = document.getElementById('preview-image').src;
-            const loc = document.getElementById('post-location').value || "Pretoria";
+            const locName = document.getElementById('post-location').value || selectedLocation.name || "Pretoria, SA";
             const cap = document.getElementById('post-caption').value;
             
             users.alex.posts.unshift({
-                img: imgSrc, loc: loc, cap: cap, 
-                lat: -25.7479, lng: 28.2293, 
+                img: imgSrc, loc: locName, cap: cap, 
+                lat: selectedLocation.lat, lng: selectedLocation.lng, 
                 time: "1m ago" 
             }); 
             
             document.getElementById('post-location').value = "";
             document.getElementById('post-caption').value = "";
+            document.getElementById('location-results').style.display = 'none';
+            
+            // Updates Map so red dot appears
+            if(myGlobeInitialized) updateGlobeData('alex', 'my-globe-viz');
             showView('view-feed');
         }
 
@@ -360,27 +396,30 @@
                 myCircle.push('kyle');
                 document.getElementById('popup-text').innerText = `You are now connected with ${users.kyle.name}.`;
                 document.getElementById('scan-popup').classList.add('show');
-                renderMessages(); renderAccount();
+                renderMessages(); 
+                if(myGlobeInitialized) renderAccount();
                 setTimeout(() => document.getElementById('scan-popup').classList.remove('show'), 3000);
             }
         }
 
-        // --- 3D PRESENCE MAP LOGIC ---
+        // --- 3D PRESENCE MAP LOGIC (REALISTIC BLUE MARBLE) ---
         function initGlobe(userId, containerId) {
             const container = document.getElementById(containerId);
             const width = container.parentElement.clientWidth;
             
             const myGlobe = Globe()(container)
-                .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-dark.jpg')
-                .backgroundColor('#fafafa')
+                .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+                .backgroundColor('#000000')
                 .width(width)
                 .height(width) 
                 .showAtmosphere(true)
+                .atmosphereColor('lightskyblue')
+                .atmosphereAltitude(0.15)
                 .pointColor(() => 'red')
-                .pointAltitude(0.05)
-                .pointRadius(1)
+                .pointAltitude(0.08)
+                .pointRadius(2) // Made larger to tap easily
                 .onPointClick((point) => {
-                    myGlobe.pointOfView({ lat: point.lat, lng: point.lng, altitude: 0.8 }, 1000);
+                    myGlobe.pointOfView({ lat: point.lat, lng: point.lng, altitude: 0.6 }, 800);
                     const btnId = containerId === 'my-globe-viz' ? 'my-map-reset' : 'other-map-reset';
                     document.getElementById(btnId).style.display = 'block';
 
@@ -407,11 +446,11 @@
             myGlobe.pointsData(userData.posts);
 
             if(userId === 'alex') {
-                myGlobe.pointOfView({ lat: 10, lng: 15, altitude: 2.5 }, 1000);
+                myGlobe.pointOfView({ lat: 10, lng: 15, altitude: 2.5 }, 1000); // Global View
             } else {
                 if(userData.posts.length > 0) {
                     const loc = userData.posts[0];
-                    myGlobe.pointOfView({ lat: loc.lat, lng: loc.lng, altitude: 1.2 }, 1000);
+                    myGlobe.pointOfView({ lat: loc.lat, lng: loc.lng, altitude: 1.2 }, 1000); // Local View
                 }
             }
         }
@@ -474,8 +513,8 @@
             document.getElementById('other-pfp').src = u.pfp;
             
             document.getElementById('profile-overlay').classList.add('open');
+            document.getElementById('profile-overlay').querySelector('.scroll').scrollTop = 0;
 
-            // Initialize other globe if needed
             if(!otherGlobeInitialized) {
                 setTimeout(() => { initGlobe(id, 'other-globe-viz'); }, 100);
                 otherGlobeInitialized = true;
